@@ -201,6 +201,43 @@ def tracks():
     db, _ = storage()
     return [public_item(x) for x in db.media.find({"kind": "audio"}).sort("createdAt", DESCENDING).limit(200)]
 
+@app.get("/api/admin/media")
+def admin_media(admin=Depends(require_admin)):
+    db, _ = storage()
+    return [
+        {**public_item(doc), "kind": doc.get("kind", "unknown")}
+        for doc in db.media.find({
+            "kind": {"$in": ["image", "audio", "generated"]}
+        }).sort("createdAt", DESCENDING).limit(500)
+    ]
+
+
+@app.delete("/api/admin/media/{media_id}")
+def delete_admin_media(media_id: str, admin=Depends(require_admin)):
+    db, fs = storage()
+
+    try:
+        oid = ObjectId(media_id)
+    except Exception:
+        raise HTTPException(404, "Media not found.")
+
+    doc = db.media.find_one({
+        "_id": oid,
+        "kind": {"$in": ["image", "audio", "generated"]}
+    })
+
+    if not doc:
+        raise HTTPException(404, "Media not found.")
+
+    try:
+        fs.delete(oid)
+    except Exception:
+        raise HTTPException(500, "Could not delete media file.")
+
+    db.media.delete_one({"_id": oid})
+
+    return {"success": True, "id": media_id}
+
 @app.get("/api/media/{media_id}")
 def get_media(media_id: str):
     db, fs = storage()

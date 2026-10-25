@@ -66,13 +66,29 @@
     });
   }
 
-  function dbPut(storeName, value) {
-    return new Promise((resolve, reject) => {
-      const req = tx(storeName, "readwrite").put(value);
-      req.onsuccess = () => resolve(value);
-      req.onerror = (e) => reject(e);
-    });
-  }
+ 
+function dbPut(storeName, value) {
+  return new Promise((resolve, reject) => {
+    let transaction;
+
+    try {
+      transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      store.put(value);
+
+      transaction.oncomplete = () => resolve(value);
+      transaction.onerror = () => {
+        reject(transaction.error || new Error("IndexedDB write failed"));
+      };
+      transaction.onabort = () => {
+        reject(transaction.error || new Error("IndexedDB transaction aborted"));
+      };
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 
   function dbDelete(storeName, id) {
     return new Promise((resolve, reject) => {

@@ -16,10 +16,9 @@
   function setAuthed(yes) {
     $("loginPanel").hidden = yes;
     $("adminPanel").hidden = !yes;
+    $("explorerPanel").hidden = !yes;
 
-    if (yes) {
-      loadMedia();
-    }
+    if (yes) loadMedia();
   }
 
   function setType() {
@@ -57,20 +56,19 @@
   }
 
   function safeMediaUrl(url) {
-    if (typeof url !== "string") return "";
-    if (!url.startsWith("/api/media/")) return "";
+    if (typeof url !== "string" || !url.startsWith("/api/media/")) {
+      return "";
+    }
     if (url.includes("..") || url.includes("\\")) return "";
-
     return `${API}${url}`;
   }
 
   function formatDate(value) {
     if (!value) return "Date unavailable";
-
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Date unavailable";
-
-    return date.toLocaleString();
+    return Number.isNaN(date.getTime())
+      ? "Date unavailable"
+      : date.toLocaleString();
   }
 
   function renderMedia() {
@@ -87,7 +85,7 @@
         return item.kind === "image" || item.kind === "generated";
       }
       if (filter === "audio") return item.kind === "audio";
-      return true;
+      return false;
     });
 
     count.textContent = `${filtered.length} item(s)`;
@@ -130,8 +128,7 @@
       name.textContent = item.name || "Untitled media";
 
       const meta = document.createElement("p");
-      meta.textContent =
-        `${item.kind || "unknown"} · ${formatDate(item.createdAt)}`;
+      meta.textContent = `${item.kind || "unknown"} · ${formatDate(item.createdAt)}`;
 
       const category = document.createElement("p");
       category.textContent = item.category
@@ -141,12 +138,9 @@
       const tags = document.createElement("p");
       const tagText = Array.isArray(item.tags)
         ? item.tags.join(", ")
-        : typeof item.tags === "string"
-          ? item.tags
-          : "";
+        : typeof item.tags === "string" ? item.tags : "";
 
       tags.textContent = tagText ? `Tags: ${tagText}` : "No tags";
-
       details.append(name, meta, category, tags);
 
       const actions = document.createElement("div");
@@ -164,11 +158,12 @@
 
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
-      deleteButton.className = "btn btn-ghost";
+      deleteButton.className = "danger-btn";
       deleteButton.textContent = "Delete";
-      deleteButton.addEventListener("click", () => deleteMedia(item));
 
+      deleteButton.addEventListener("click", () => deleteMedia(item));
       actions.appendChild(deleteButton);
+
       card.append(preview, details, actions);
       container.appendChild(card);
     }
@@ -200,14 +195,11 @@
       return;
     }
 
-    const name = item.name || "this media file";
-    const confirmed = window.confirm(
-      `Permanently delete "${name}"?\n\nThis cannot be undone.`
-    );
+    if (!window.confirm(
+      `Permanently delete "${item.name || "this media file"}"?\n\nThis cannot be undone.`
+    )) return;
 
-    if (!confirmed) return;
-
-    status("mediaStatus", `Deleting ${name}…`);
+    status("mediaStatus", "Deleting media…");
 
     try {
       await apiRequest(
@@ -215,10 +207,7 @@
         { method: "DELETE" }
       );
 
-      mediaItems = mediaItems.filter(
-        (media) => media.id !== item.id
-      );
-
+      mediaItems = mediaItems.filter((media) => media.id !== item.id);
       renderMedia();
       status("mediaStatus", "Media deleted successfully.");
     } catch (error) {
@@ -234,10 +223,12 @@
     event.preventDefault();
 
     if (!API) {
-      status("loginStatus", "Backend URL is missing in config.js.");
+      status("loginStatus", "Backend URL missing in config.js.");
       return;
     }
 
+    const button = $("loginForm").querySelector('button[type="submit"]');
+    button.disabled = true;
     status("loginStatus", "Signing in…");
 
     try {
@@ -253,7 +244,7 @@
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.detail || "Login failed.");
+        throw new Error(data.detail || `Login failed (${response.status}).`);
       }
 
       if (!data.access_token) {
@@ -262,11 +253,12 @@
 
       token = data.access_token;
       sessionStorage.setItem("mahiru_admin_token", token);
-
       status("loginStatus", "");
       setAuthed(true);
     } catch (error) {
       status("loginStatus", error.message || "Could not connect to backend.");
+    } finally {
+      button.disabled = false;
     }
   });
 
@@ -285,7 +277,6 @@
     }
 
     const files = Array.from($("files").files || []);
-
     if (!files.length) {
       status("uploadStatus", "Choose at least one file.");
       return;
@@ -293,10 +284,9 @@
 
     const type = $("mediaType").value;
     const endpoint = `/api/admin/${type}`;
+    let uploaded = 0;
 
     status("uploadStatus", `Uploading ${files.length} file(s)…`);
-
-    let uploaded = 0;
 
     try {
       for (const file of files) {
@@ -305,16 +295,9 @@
         form.append("category", $("category").value);
         form.append("tags", $("tags").value);
 
-        await apiRequest(endpoint, {
-          method: "POST",
-          body: form
-        });
-
+        await apiRequest(endpoint, { method: "POST", body: form });
         uploaded++;
-        status(
-          "uploadStatus",
-          `Uploaded ${uploaded} of ${files.length} file(s)…`
-        );
+        status("uploadStatus", `Uploaded ${uploaded} of ${files.length} file(s)…`);
       }
 
       status("uploadStatus", `Published ${uploaded} file(s) successfully 🌸`);
@@ -335,9 +318,5 @@
     status("loginStatus", "Backend URL not configured in config.js.");
   }
 
-  if (token) {
-    setAuthed(true);
-  } else {
-    setAuthed(false);
-  }
+  setAuthed(false);
 })();

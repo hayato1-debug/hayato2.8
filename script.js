@@ -1262,15 +1262,23 @@ if (pageName === "home") updateHeroStats();
     });
 
 
+    
     // Accent
     document.querySelectorAll(".swatch").forEach((sw) => {
-      sw.addEventListener("click", () => {
+      sw.addEventListener("click", async () => {
         document.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
         sw.classList.add("active");
-        saveSetting("accent", sw.dataset.accent);
-        applyAccent();
+
+        try {
+          await saveSetting("accent", sw.dataset.accent);
+          applyAccent();
+        } catch (error) {
+          console.error("Accent save failed:", error);
+          alert("Accent colour save failed. Please check browser storage.");
+        }
       });
     });
+
 
     document.getElementById("blurSlider").addEventListener("input", (e) => {
       saveSetting("blur", Number(e.target.value));

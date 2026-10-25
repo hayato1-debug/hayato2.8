@@ -172,6 +172,21 @@
 
   const API_BASE = (window.MAHIRU_API_BASE || "").replace(/\/$/, "");
 
+  /** Resolve API media paths to absolute URLs using MAHIRU_API_BASE. */
+  function resolveMediaUrl(url) {
+    if (!url) return "";
+    const s = String(url).trim();
+    if (/^https?:\/\//i.test(s)) return s; // already absolute
+    if (!API_BASE) return s;
+    return s.startsWith("/") ? `${API_BASE}${s}` : `${API_BASE}/${s}`;
+  }
+
+  function toTimestamp(value) {
+    if (value == null || value === "") return Date.now();
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    const ms = Date.parse(value);
+    return Number.isFinite(ms) ? ms : Date.now();
+  }
 
   async function loadPublishedMedia() {
     if (!API_BASE) return;
@@ -182,18 +197,36 @@
       ]);
       if (imagesRes.ok) {
         const remoteImages = await imagesRes.json();
-        const mapped = remoteImages.map((item) => ({
-          ...item, id: `remote-${item.id}`, remoteId: item.id,
-          blob: `${API_BASE}${item.url}`, uploadDate: item.uploadDate || item.createdAt || Date.now(),
-          favorite: false, rating: 0, tags: item.tags || [], album: "", category: item.category || "Published"
-        }));
+        const mapped = (Array.isArray(remoteImages) ? remoteImages : []).map((item) => {
+          const absoluteUrl = resolveMediaUrl(item.url);
+          return {
+            id: `remote-${item.id}`,
+            remoteId: item.id,
+            blob: absoluteUrl, // consumed by gcardHTML / lightbox / recent-strip as <img src>
+            title: item.name || item.title || "Published",
+            name: item.name || "Published",
+            description: "",
+            tags: item.tags || [],
+            album: "",
+            category: item.category || "Published",
+            rating: 0,
+            favorite: false,
+            uploadDate: toTimestamp(item.uploadDate || item.createdAt),
+            size: item.size || 0,
+            width: 0,
+            height: 0,
+          };
+        });
         state.images = [...mapped, ...state.images.filter((i) => !i.remoteId)];
       }
       if (tracksRes.ok) {
         const remoteTracks = await tracksRes.json();
-        const mappedTracks = remoteTracks.map((item) => ({
-          id: `remote-${item.id}`, remoteId: item.id, name: item.name,
-          blob: `${API_BASE}${item.url}`, addedAt: item.createdAt || Date.now()
+        const mappedTracks = (Array.isArray(remoteTracks) ? remoteTracks : []).map((item) => ({
+          id: `remote-${item.id}`,
+          remoteId: item.id,
+          name: item.name || "Track",
+          blob: resolveMediaUrl(item.url),
+          addedAt: toTimestamp(item.createdAt),
         }));
         state.tracks = [...mappedTracks, ...state.tracks.filter((t) => !t.remoteId)];
       }
@@ -292,7 +325,7 @@
           const card = document.createElement("article");
           card.className = "generated-image-card";
           const img = document.createElement("img");
-          img.src = `${API_BASE}${image.url}`;
+          img.src = resolveMediaUrl(image.url);
           img.alt = prompt;
           img.loading = "lazy";
           const actions = document.createElement("div");

@@ -1244,15 +1244,23 @@ if (pageName === "home") updateHeroStats();
   function applyAnimSpeed() { document.documentElement.style.setProperty("--anim-speed", state.settings.animSpeed / 100); }
 
   function initSettings() {
+ 
     // Theme
     document.querySelectorAll("#themeSegment button").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         document.querySelectorAll("#themeSegment button").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        saveSetting("theme", btn.dataset.theme);
-        applyTheme();
+
+        try {
+          await saveSetting("theme", btn.dataset.theme);
+          applyTheme();
+        } catch (error) {
+          console.error("Theme save failed:", error);
+          alert("Theme save failed. Please check browser storage.");
+        }
       });
     });
+
 
     // Accent
     document.querySelectorAll(".swatch").forEach((sw) => {

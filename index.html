@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Mahiru Memory Garden — Your Anime Gallery</title>
+<meta name="description" content="A soft, glass-lit gallery for your favorite anime memories." />
+
+<!-- Fonts: a rounded display face for warmth, a clean body face for readability -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ AMBIENT LAYERS ============ -->
+<div class="sky" aria-hidden="true">
+  <div class="sky-glow sky-glow--one"></div>
+  <div class="sky-glow sky-glow--two"></div>
+  <div class="sky-glow sky-glow--three"></div>
+</div>
+<canvas id="sakuraCanvas" aria-hidden="true"></canvas>
+<div id="particleField" class="particle-field" aria-hidden="true"></div>
+
+<!-- ============ TOASTS ============ -->
+<div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+<!-- ============ NAVIGATION ============ -->
+<header class="topbar">
+  <button class="brand" id="logoButton" title="Mahiru Memory Garden">
+    <span class="brand-mark">✿</span>
+    <span class="brand-text">Mahiru <em>Memory Garden</em></span>
+  </button>
+
+  <nav class="tabs" id="mainNav">
+    <button class="tab active" data-page="home">Home</button>
+    <button class="tab" data-page="gallery">Gallery</button>
+    <button class="tab" data-page="albums">Albums</button>
+    <button class="tab" data-page="favorites">Favorites</button>
+    <button class="tab" data-page="music">Music</button>
+    <button class="tab" data-page="ai-chat">AI Chat</button>
+    <button class="tab" data-page="image-studio">AI Image Studio</button>
+    <button class="tab" data-page="stats">Statistics</button>
+    <button class="tab" data-page="settings">Settings</button>
+    <button class="tab" data-page="about">About</button>
+  </nav>
+
+  <div class="topbar-actions">
+    <div class="search-wrap">
+      <input type="text" id="globalSearch" placeholder="Search titles, tags, albums…" autocomplete="off" />
+      <span class="search-icon">⌕</span>
+    </div>
+    <a class="icon-btn admin-entry" href="admin/" title="Admin panel" aria-label="Admin panel">⚙</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile nav drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <button class="tab" data-page="home">Home</button>
+  <button class="tab" data-page="gallery">Gallery</button>
+  <button class="tab" data-page="albums">Albums</button>
+  <button class="tab" data-page="favorites">Favorites</button>
+  <button class="tab" data-page="music">Music</button>
+  <button class="tab" data-page="ai-chat">AI Chat</button>
+  <button class="tab" data-page="image-studio">AI Image Studio</button>
+  <button class="tab" data-page="stats">Statistics</button>
+  <button class="tab" data-page="settings">Settings</button>
+  <button class="tab" data-page="about">About</button>
+</div>
+
+<main id="pageRoot">
+
+  <!-- ============ HOME ============ -->
+  <section class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-badge">a quiet place for your favorite frames</div>
+      <h1 class="hero-title">
+        Every memory<br/>
+        deserves a <span class="accent-word">soft</span> place to rest.
+      </h1>
+      <p class="hero-sub">
+        Mahiru Memory Garden keeps your anime screenshots, fan art, and edits safe on your
+        own device — organized, searchable, and beautifully framed. Nothing ever leaves your browser.
+      </p>
+      <div class="hero-actions">
+        <span class="btn btn-ghost btn-lg">Curated memories · Admin-managed</span>
+        <button class="btn btn-ghost btn-lg ripple" data-page-link="gallery">
+          Browse Gallery
+        </button>
+      </div>
+
+      <div class="hero-stats" id="heroStats">
+        <div class="hero-stat glass"><span class="hs-num" id="hsImages">0</span><span class="hs-label">Images</span></div>
+        <div class="hero-stat glass"><span class="hs-num" id="hsAlbums">0</span><span class="hs-label">Albums</span></div>
+        <div class="hero-stat glass"><span class="hs-num" id="hsFavs">0</span><span class="hs-label">Favorites</span></div>
+        <div class="hero-stat glass"><span class="hs-num" id="hsTracks">0</span><span class="hs-label">Tracks</span></div>
+      </div>
+    </div>
+
+    <div class="feature-grid">
+      <div class="glass feature-card float-card">
+        <div class="feature-icon">🌸</div>
+        <h3>Sakura Ambience</h3>
+        <p>Toggle drifting sakura petals across the whole garden, with adjustable density, from Settings.</p>
+      </div>
+      <div class="glass feature-card float-card" style="--delay:0.6s">
+        <div class="feature-icon">🖼️</div>
+        <h3>Masonry Gallery</h3>
+        <p>A flowing, responsive layout with lazy loading, fullscreen zoom, and keyboard navigation.</p>
+      </div>
+      <div class="glass feature-card float-card" style="--delay:1.2s">
+        <div class="feature-icon">🎵</div>
+        <h3>Ambient Player</h3>
+        <p>Bring your own music, build a playlist, and let it drift along while you browse.</p>
+      </div>
+      <div class="glass feature-card float-card" style="--delay:1.8s">
+        <div class="feature-icon">🔒</div>
+        <h3>Fully Offline</h3>
+        <p>Everything is stored locally in your browser with IndexedDB. No servers, no accounts.</p>
+      </div>
+    </div>
+
+    <div class="glass recent-panel">
+      <div class="panel-header">
+        <h2>Recently Added</h2>
+        <button class="btn btn-text" data-page-link="gallery">View all →</button>
+      </div>
+      <div class="recent-strip" id="recentStrip">
+        <p class="empty-hint">Nothing here yet — upload your first image to begin your garden.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY ============ -->
+  <section class="page" id="page-gallery">
+    <div class="page-head">
+      <h1>Gallery</h1>
+      <span class="page-note">Uploads are available in the admin panel.</span>
+    </div>
+
+    <div class="glass drive-panel" id="drivePanel">
+      <div class="drive-panel-head">
+        <h3>Google Drive Folder</h3>
+        <button class="icon-btn" id="driveToggleBtn" title="Show/Hide">−</button>
+      </div>
+      <div class="drive-panel-body" id="drivePanelBody">
+        <p class="settings-note">Apne Drive folder ka link paste karo — ye yaad rakh liya jayega, dobara paste nahi karna padega.</p>
+        <div class="drive-input-row">
+          <input type="text" id="driveLinkInput" class="text-field" placeholder="https://drive.google.com/drive/folders/…" />
+          <button class="btn btn-primary ripple" id="driveSaveBtn">Save</button>
+          <button class="btn btn-ghost" id="driveClearBtn">Clear</button>
+        </div>
+        <iframe id="driveFrame" class="drive-embed" hidden></iframe>
+        <p class="empty-hint" id="driveEmptyHint">Koi folder link save nahi kiya gaya abhi tak.</p>
+      </div>
+    </div>
+
+    <div class="filter-bar glass">
+      <select id="filterSort">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="favorites">Favorites</option>
+        <option value="rating">Highest Rated</option>
+        <option value="landscape">Landscape</option>
+        <option value="portrait">Portrait</option>
+        <option value="square">Square</option>
+      </select>
+      <select id="filterAlbum"><option value="">All Albums</option></select>
+      <select id="filterCategory"><option value="">All Categories</option></select>
+      <input type="text" id="filterTag" placeholder="Filter by tag…" />
+      <button class="btn btn-ghost" id="clearFiltersBtn">Clear</button>
+    </div>
+
+    <div class="masonry" id="galleryGrid"></div>
+    <div class="empty-state" id="galleryEmpty" hidden>
+      <div class="empty-icon">🌷</div>
+      <p>Your garden is empty. Upload some memories to get started.</p>
+    </div>
+    <div class="load-sentinel" id="gallerySentinel"></div>
+  </section>
+
+  <!-- ============ ALBUMS ============ -->
+  <section class="page" id="page-albums">
+    <div class="page-head">
+      <h1>Albums</h1>
+      <button class="btn btn-primary ripple" id="createAlbumBtn"><span class="btn-icon">＋</span> New Album</button>
+    </div>
+    <div class="album-grid" id="albumGrid"></div>
+    <div class="empty-state" id="albumsEmpty" hidden>
+      <div class="empty-icon">📁</div>
+      <p>No albums yet. Create one to start organizing your memories.</p>
+    </div>
+  </section>
+
+  <!-- ============ FAVORITES ============ -->
+  <section class="page" id="page-favorites">
+    <div class="page-head"><h1>Favorites</h1></div>
+    <div class="masonry" id="favGrid"></div>
+    <div class="empty-state" id="favEmpty" hidden>
+      <div class="empty-icon">💗</div>
+      <p>Nothing favorited yet. Tap the heart on an image to keep it close.</p>
+    </div>
+  </section>
+
+  <!-- ============ MUSIC ============ -->
+  <section class="page" id="page-music">
+    <div class="page-head">
+      <h1>Music</h1>
+      <span class="page-note">Tracks are managed by the admin.</span>
+    </div>
+
+    <div class="music-layout">
+      <div class="glass visualizer-card">
+        <canvas id="visualizerCanvas"></canvas>
+        <div class="now-playing">
+          <div class="np-art" id="npArt">♪</div>
+          <div class="np-info">
+            <div class="np-title" id="npTitle">No track selected</div>
+            <div class="np-sub" id="npSub">Upload a song to begin</div>
+          </div>
+        </div>
+        <div class="progress-row">
+          <span class="time" id="npTimeCurrent">0:00</span>
+          <input type="range" id="npProgress" min="0" max="100" value="0" />
+          <span class="time" id="npTimeTotal">0:00</span>
+        </div>
+        <div class="player-controls">
+          <button class="icon-btn" id="npShuffle" title="Shuffle">🔀</button>
+          <button class="icon-btn" id="npPrev" title="Previous">⏮</button>
+          <button class="icon-btn icon-btn-lg" id="npPlay" title="Play/Pause">▶</button>
+          <button class="icon-btn" id="npNext" title="Next">⏭</button>
+          <button class="icon-btn" id="npRepeat" title="Repeat">🔁</button>
+        </div>
+        <div class="volume-row">
+          <span>🔈</span>
+          <input type="range" id="npVolume" min="0" max="100" value="80" />
+        </div>
+      </div>
+
+      <div class="glass playlist-card">
+        <h3>Playlist</h3>
+        <ul class="playlist" id="playlistList"></ul>
+        <p class="empty-hint" id="playlistEmpty">No tracks yet — add MP3, WAV, or OGG files.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ AI CHAT ============ -->
+  <section class="page" id="page-ai-chat">
+    <div class="page-head"><div><h1>Talk with Mahiru ✿</h1><p class="page-note">Your gentle Mahiru AI companion for chats, creative ideas, coding, and little everyday moments.</p></div><button class="btn btn-ghost" id="aiClearChat">Clear chat</button></div>
+    <div class="glass ai-panel">
+      <div class="mahiru-chat-identity"><div class="mahiru-chat-avatar" aria-hidden="true">✿</div><div><strong>Mahiru</strong><span>Here with you · AI character</span></div><span class="mahiru-chat-status">● Ready to chat</span></div>
+      <div class="ai-notice">This is an AI portrayal of Mahiru, powered by Groq. Messages are sent to the configured backend. Please don’t share passwords, API keys, or sensitive personal information.</div>
+      <div id="aiChatMessages" class="ai-chat-messages" aria-live="polite"><div class="ai-message assistant"><strong>Mahiru ✿</strong><p>Oh, you’re here. Welcome back to the garden. ♡ What would you like to talk about today? I’ll do my best to help.</p></div></div>
+      <form id="aiChatForm" class="ai-chat-form">
+        <label class="sr-only" for="aiChatInput">Message</label>
+        <textarea id="aiChatInput" rows="2" maxlength="4000" placeholder="Talk to Mahiru…" required></textarea>
+        <button class="btn btn-primary" id="aiChatSend" type="submit">Send ↗</button>
+      </form>
+      <p id="aiChatStatus" class="ai-status" role="status"></p>
+    </div>
+  </section>
+
+  <!-- ============ AI IMAGE STUDIO ============ -->
+  <section class="page" id="page-image-studio">
+    <div class="page-head"><div><h1>AI Image Studio</h1><p class="page-note">Turn a prompt into an image with Ideogram.</p></div></div>
+    <div class="glass ai-panel image-studio-panel">
+      <form id="imageGenForm" class="image-gen-form">
+        <label for="imagePrompt">Describe the image</label>
+        <textarea id="imagePrompt" rows="4" maxlength="1500" placeholder="Example: an elegant violet-lit fantasy garden at dusk, anime illustration…" required></textarea>
+        <div class="image-gen-options">
+          <label for="imageStyle">Style</label>
+          <select id="imageStyle"><option value="auto">Auto</option><option value="general">General</option><option value="realistic">Realistic</option><option value="design">Design</option><option value="anime">Anime (describe it in the prompt)</option></select>
+          <label for="imageCount">Images</label>
+          <select id="imageCount"><option value="1">1 image</option><option value="2">2 images</option></select>
+        </div>
+        <button class="btn btn-primary" id="imageGenButton" type="submit">✦ Generate image</button>
+      </form>
+      <p id="imageGenStatus" class="ai-status" role="status"></p>
+      <div id="imageGenResults" class="generated-image-grid"></div>
+      <p class="ai-notice">Generation may consume your Ideogram API credits. Results are stored temporarily in the app's MongoDB media store and are not automatically added to the public gallery.</p>
+    </div>
+  </section>
+
+  <!-- ============ STATISTICS ============ -->
+  <section class="page" id="page-stats">
+    <div class="page-head"><h1>Statistics</h1></div>
+    <div class="stats-grid" id="statsGrid"></div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="page" id="page-settings">
+    <div class="page-head"><h1>Settings</h1></div>
+
+    <div class="settings-grid">
+      <div class="glass settings-card">
+        <h3>Appearance</h3>
+        <div class="setting-row">
+          <label>Theme</label>
+          <div class="segmented" id="themeSegment">
+            <button data-theme="light" class="active">Light</button>
+            <button data-theme="dark">Dark</button>
+            <button data-theme="auto">Auto</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Accent Color</label>
+          <div class="swatches" id="accentSwatches">
+            <button class="swatch active" style="--sw:#8AB8E8" data-accent="#8AB8E8"></button>
+            <button class="swatch" style="--sw:#B39DDB" data-accent="#B39DDB"></button>
+            <button class="swatch" style="--sw:#F0A8C4" data-accent="#F0A8C4"></button>
+            <button class="swatch" style="--sw:#9DDBC0" data-accent="#9DDBC0"></button>
+            <button class="swatch" style="--sw:#E8C48A" data-accent="#E8C48A"></button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Background Blur</label>
+          <input type="range" id="blurSlider" min="0" max="40" value="18" />
+        </div>
+        <div class="setting-row">
+          <label>Animation Speed</label>
+          <input type="range" id="animSpeedSlider" min="50" max="200" value="100" />
+        </div>
+      </div>
+
+      <div class="glass settings-card">
+        <h3>Sakura Mode</h3>
+        <div class="setting-row">
+          <label>Enable Falling Petals</label>
+          <label class="switch"><input type="checkbox" id="sakuraToggle" checked /><span class="slider-toggle"></span></label>
+        </div>
+        <div class="setting-row">
+          <label>Petal Density</label>
+          <input type="range" id="sakuraDensity" min="0" max="60" value="18" />
+        </div>
+      </div>
+
+      <div class="glass settings-card">
+        <h3>Music</h3>
+        <div class="setting-row">
+          <label>Default Volume</label>
+          <input type="range" id="defaultVolumeSlider" min="0" max="100" value="80" />
+        </div>
+      </div>
+
+      <div class="glass settings-card">
+        <h3>Database</h3>
+<p class="settings-note">
+  Your preferences stay in this browser.
+  Published gallery media is served from the protected backend.
+</p>
+<div class="settings-btn-row">
+  <button class="btn btn-ghost" id="exportBtn">Export Data</button>
+</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="page" id="page-about">
+    <div class="page-head"><h1>About</h1></div>
+    <div class="glass about-card">
+      <div class="about-mark">✿</div>
+      <h2>Mahiru Memory Garden</h2>
+      <p>
+        A calm space for anime memories, fan art, edits, and music. Public media is served by the backend; only authenticated admin uploads can publish new media.
+      </p>
+      <p class="version-line">Version <strong>1.0.0</strong></p>
+      <p class="credits-line">Crafted with care by <em>you</em> — developer credits go here.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ ALBUM MODAL ============ -->
+<div class="modal-overlay" id="albumModal">
+  <div class="modal glass modal-sm">
+    <button class="modal-close" data-close="albumModal">✕</button>
+    <h2 id="albumModalTitle">New Album</h2>
+    <label class="field-label">Name</label>
+    <input type="text" id="albumNameInput" class="text-field" placeholder="e.g. Rainy Day Screenshots" />
+    <label class="field-label">Category</label>
+    <input type="text" id="albumCategoryInput" class="text-field" placeholder="e.g. Slice of Life" />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="albumModal">Cancel</button>
+      <button class="btn btn-primary ripple" id="saveAlbumBtn">Save Album</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ IMAGE DETAIL / LIGHTBOX ============ -->
+<div class="modal-overlay lightbox-overlay" id="lightboxModal">
+  <button class="lb-close" data-close="lightboxModal">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev">‹</button>
+  <button class="lb-nav lb-next" id="lbNext">›</button>
+
+  <div class="lightbox-stage">
+    <img id="lbImage" src="" alt="" />
+  </div>
+
+  <div class="lb-panel glass">
+    <div class="lb-panel-scroll">
+      <div class="lb-title-row">
+        <input type="text" id="lbTitleInput" class="lb-title-input" placeholder="Untitled memory" />
+        <button class="icon-btn" id="lbFavBtn" title="Favorite">♡</button>
+      </div>
+
+      <div class="lb-rating" id="lbRating">
+        <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+      </div>
+
+      <label class="field-label">Description</label>
+      <textarea id="lbDescInput" class="text-field" rows="3" placeholder="Add a description…"></textarea>
+
+      <label class="field-label">Tags (comma separated)</label>
+      <input type="text" id="lbTagsInput" class="text-field" placeholder="sunset, moe, wholesome" />
+
+      <label class="field-label">Album</label>
+      <select id="lbAlbumSelect"><option value="">No Album</option></select>
+
+      <label class="field-label">Category</label>
+      <input type="text" id="lbCategoryInput" class="text-field" placeholder="e.g. Wallpapers" />
+
+      <div class="lb-meta" id="lbMeta"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-danger" id="lbDeleteBtn">Delete</button>
+        <button class="btn btn-primary ripple" id="lbSaveBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FLOATING MINI PLAYER ============ -->
+<div class="mini-player glass" id="miniPlayer" hidden>
+  <div class="mini-art" id="miniArt">♪</div>
+  <div class="mini-info">
+    <div class="mini-title" id="miniTitle">—</div>
+    <div class="mini-bar"><div class="mini-bar-fill" id="miniBarFill"></div></div>
+  </div>
+  <button class="icon-btn" id="miniPlayBtn">▶</button>
+  <button class="icon-btn" id="miniExpandBtn" title="Open Music">⤢</button>
+</div>
+
+<!-- ============ CONFIRM DIALOG ============ -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal glass modal-sm">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p id="confirmBody"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirmCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ANGEL MODE QUOTE OVERLAY ============ -->
+<div class="angel-quote" id="angelQuote"></div>
+
+<audio id="audioPlayer" preload="metadata"></audio>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">✿ Mahiru Memory Garden</div>
+    <div class="footer-icons">
+      <span title="Offline-first">🔒</span>
+      <span title="Made with care">🌸</span>
+      <span title="Local storage">💾</span>
+    </div>
+    <div class="footer-meta">v2.1.0 · AI tools · Admin-managed media · MongoDB-backed publishing</div>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

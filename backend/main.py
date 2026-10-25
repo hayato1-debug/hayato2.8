@@ -24,7 +24,7 @@ TOKEN_TTL_SECONDS = 1800
 
 app = FastAPI(title="Mahiru Memory Garden API", docs_url=None, redoc_url=None)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=False,
-                   allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["Authorization", "Content-Type"])
+                   allow_methods=["GET", "POST", "DELETE", "OPTIONS"], allow_headers=["Authorization", "Content-Type"])
 client = None
 _db = None
 _fs = None

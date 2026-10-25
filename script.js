@@ -293,6 +293,8 @@ function dbPut(storeName, value) {
      ======================================================================== */
   function goToPage(pageName) {
     state.currentPage = pageName;
+
+if (pageName === "home") updateHeroStats();
     document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
     const target = document.getElementById(`page-${pageName}`);
     if (target) target.classList.add("active");
